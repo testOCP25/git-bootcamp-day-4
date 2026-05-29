@@ -9,7 +9,8 @@
 
 ### Стартовое состояние
 
-[FIXME: Что было сделано перед началом разрешения конфликтов: ветка `feat/perf-tuning`, какие файлы изменены и зачем; встречный коммит на `main`. Кратко, своими словами.]
+Были изменены файлы согласно заданию. Так как с первого раза не получилось сделать путь В, то второй раз не сильно заморачивался над состоянием файлов, была необходимость понять, как это выполнить задачу. В целом из-за этого пропустил один из скриншотов (надеюсь это не критично).
+
 
 ```bash
 # git log --oneline --graph --all (на момент окончания подготовки)
@@ -19,22 +20,47 @@
 
 ### Путь A — через `merge`
 
-[FIXME:Что сделано на ветке `experiment/merge`, какой файл и через что разрешали (CLI или VS Code Merge Editor). Какие компромиссы выбрали и почему.]
+Была создана отдельная ветка `experiment/merge`, все конфликты в файлах решал через VS Code Merge Editor, потому что это максимально наглядно и удобно. В первый заход пробовал как CLI, так и VS Code.
 
 ```bash
-# ключевые команды
+git switch -c feat/perf-tuning
+git --no-pager log --oneline --graph --all
+#изменение файлов в VS Code config.py services.py index.html Dockerfile
+git add webapp/config.py webapp/services.py webapp/templates/index.html Dockerfile
+git switch main
+#изменение файлов в VS Code config.py services.py index.html Dockerfile
+git add webapp/config.py webapp/services.py webapp/templates/index.html Dockerfile
+git --no-pager log --oneline --graph --all
+git switch -c experiment/merge
+#Устранение конфликтов
+git merge feat/perf-tuning
+git add webapp/config.py webapp/services.py webapp/templates/index.html Dockerfile
+git status
+git commit
+git --no-pager log --oneline --graph --all
+git push -u origin experiment/merge
 ```
 
 ![Состояние Merge Editor / CLI на момент конфликта](screenshots/02-merge-conflict.png)
+#Сам скрин ошибочный, удалил нормальный скрин в ходе откатов коммитов
 
 ![Финальный merge-коммит](screenshots/03-merge-result.png)
 
 ### Путь B — через `rebase`
 
-[FIXME:Что сделано на ветке `experiment/rebase`. На какие коммиты конфликты пришлись и как их разрешали. Чем поведение отличалось от пути A.]
+Вот тут самый большой вопрос возник, потому что задачу и метод выполнения не понял до конца.
+Пришлось в решение подглянуть и не совсем разобрался, почему по заданию не нужен откат и почему оно так работает.
 
 ```bash
-# ключевые команды
+git switch main
+git switch -c experiment/rebase feat/perf-tuning
+git --no-pager log --oneline --graph --all   
+git rebase main
+#Устранение конфликтов
+git add webapp/config.py webapp/services.py webapp/templates/index.html Dockerfile
+git rebase --continue
+git push -u origin experiment/rebase
+git --no-pager log --oneline --graph --all  
 ```
 
 ![История после rebase](screenshots/04-rebase-result.png)
@@ -45,21 +71,56 @@
 
 ![Сравнение историй experiment/merge vs experiment/rebase](screenshots/05-history-comparison.png)
 
-[FIXME: Что я заметил(а) в процессе сравнения (например):
-- размер истории —
-- наличие/отсутствие merge-коммита —
-- хеши коммитов фичи —
-- видна ли в истории ветка как сущность —
-]
+Что я заметил(а) в процессе сравнения:
+- размер истории для merge больше, но больше и истории, и данных в логах, которые могут помочь при необходимости
+- мне самому больше merge понравился, но, возможно, это из-за вопросов, которые вызвал у меня rebase
+- наличие merge-коммита в ветке с rebase — для меня минус
+- видна ли в истории ветка как сущность — видна, выделяется цветом, хотя мне нужно больше времени, чтобы разобраться с таким выделением
+
 
 ### Какой подход я бы выбрал(а) в команде и почему
 
-[FIXME: Свободный ,например: для слияния готовой фичи в общий `main` через PR — `merge` (или `merge --no-ff`); для обновления **своей** приватной ветки от свежего `main` перед PR — `rebase`. Подкрепите свой выбор тем, что увидели в этом задании.]
+На мой взгляд, лучше merge. Работать проще и история шире. Хотя я чувствую, что здесь недостаточно для меня информации и может быть примеров, как это работает в жизни
 
 ## Задания со звездочкой (опционально)
 > это заполняете только если делали. иначе не включайте в отчет и удалите их шаблона
 
 ### ⭐1 — `git pull` vs `git pull --rebase`
+
+Воспроизвел последовательность шагов в задании. 
+Сначала пройден Путь A — git pull. Но для выполения пришлось явно прописать `git config pull.rebase false`, иначе не проходил `git pull`. 
+История вышла большой и подрробной:
+```bash
+*   08a0574 (HEAD -> main) Merge branch 'main' of github.com:testOCP25/git-bootcamp-day-4
+|\
+| * 5bcebf2 (origin/main, origin/HEAD) Create from-server.md
+* | 1bd118c docs: запись в NOTES для ⭐1
+|/
+* 4b8c41d (experiment/rebase) docs: main task finished,  added LAB.MD, folder with screenshots
+* d2d3fb7 (origin/experiment/rebase) feat(perf): tune timeouts, pools, workers for perf testing
+| * ad47bef (origin/experiment/merge, experiment/merge) Merge branch 'feat/perf-tuning' into experiment/merge
+|/|
+| * a930279 (origin/feat/perf-tuning, feat/perf-tuning) feat(perf): tune timeouts, pools, workers for perf testing
+* | 1616878 fix(prod): tighten timeouts, harden Dockerfile, add welcome banner
+|/
+* 91c6e3d Initial commit: webapp-notes starter
+```
+Потом успешно откатившись и выполнив `git pull --rebase`, получил результат почишще:
+```bash
+* c4edfb1 (HEAD -> main) docs: запись в NOTES для ⭐1
+* 5bcebf2 (origin/main, origin/HEAD) Create from-server.md
+* 4b8c41d (experiment/rebase) docs: main task finished,  added LAB.MD, folder with screenshots
+* d2d3fb7 (origin/experiment/rebase) feat(perf): tune timeouts, pools, workers for perf testing
+| * ad47bef (origin/experiment/merge, experiment/merge) Merge branch 'feat/perf-tuning' into experiment/merge
+|/|
+| * a930279 (origin/feat/perf-tuning, feat/perf-tuning) feat(perf): tune timeouts, pools, workers for perf testing
+* | 1616878 fix(prod): tighten timeouts, harden Dockerfile, add welcome banner
+|/
+* 91c6e3d Initial commit: webapp-notes starter
+```
+В целом явно видна разница в подходах, отдельно бы выделил, что в команды для каждого случая разные команды итоговые и во втором случае надо сделать `git push`. 
+настройку оставил в итоге для rebase:
+`git config --global pull.rebase true`
 
 Что было воспроизведено, какая разница в истории получилась, какую глобальную настройку поставили в `~/.gitconfig`.
 
