@@ -152,7 +152,7 @@ git --no-pager log --oneline --graph --all
 
 ### ⭐3 — rebase с конфликтом на каждом коммите
 
-Сюжет, через сколько `--continue` прошли, что почувствовали по сравнению с пассивным merge.
+Создана ветка `experiment/rebase-multi`. Сделано два коммита в ветку и один в main. После rebase c main возникло два конфлика, которые по очереди решал в VS Code. Отдельно отмечу, что удобно смотреть такие вещи в GitLens. Очень наглядно.
 
 ![Финал rebase --continue](screenshots/star-3-multi-conflict.png)
 
