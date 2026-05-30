@@ -69,13 +69,13 @@ git push -u origin experiment/merge
 ```bash
 git switch main
 git switch -c experiment/rebase feat/perf-tuning
-git --no-pager log --oneline --graph --all   
+git --no-pager log --oneline --graph --all
 git rebase main
 #Устранение конфликтов
 git add webapp/config.py webapp/services.py webapp/templates/index.html Dockerfile
 git rebase --continue
 git push -u origin experiment/rebase
-git --no-pager log --oneline --graph --all  
+git --no-pager log --oneline --graph --all
 ```
 
 ![История после rebase](screenshots/04-rebase-result.png)
@@ -102,8 +102,8 @@ git --no-pager log --oneline --graph --all
 
 ### ⭐1 — `git pull` vs `git pull --rebase`
 
-Воспроизвел последовательность шагов в задании. 
-Сначала пройден Путь A — git pull. Но для выполения пришлось явно прописать `git config pull.rebase false`, иначе не проходил `git pull`. 
+Воспроизвел последовательность шагов в задании.
+Сначала пройден Путь A — git pull. Но для выполения пришлось явно прописать `git config pull.rebase false`, иначе не проходил `git pull`.
 История вышла большой и подрробной:
 ```bash
 *   08a0574 (HEAD -> main) Merge branch 'main' of github.com:testOCP25/git-bootcamp-day-4
@@ -133,7 +133,7 @@ git --no-pager log --oneline --graph --all
 |/
 * 91c6e3d Initial commit: webapp-notes starter
 ```
-В целом явно видна разница в подходах, отдельно бы выделил, что в команды для каждого случая разные команды итоговые и во втором случае надо сделать `git push`. 
+В целом явно видна разница в подходах, отдельно бы выделил, что в команды для каждого случая разные команды итоговые и во втором случае надо сделать `git push`.
 настройку оставил в итоге для rebase:
 `git config --global pull.rebase true`
 
@@ -143,7 +143,10 @@ git --no-pager log --oneline --graph --all
 
 ### ⭐2 — `--force-with-lease` vs `--force`
 
-Что было сделано (`git commit --amend` после push), почему обычный `git push` отказал, чем `--force-with-lease` безопаснее `--force`.
+Изменил файл, отправил на сервер, после чего еще раз изменил, сделал `git commit --amend`, при этом `git push` отказал, `git push --force-with-lease` безопаснее, чем `git push --force`, потому что он добавляет проверку: он не перезапишет удалённую ветку, если в ней появились новые коммиты, о которых ваша локальная копия не знает.
+Попробовал с несколькими вариантами, локальными и удаленными изменениями. Думаю, что сам `git` достаточно мощшный инструмент и надо обязательно читать сообщения и проверять на удаленном ресурсе репозиторий.
+
+Более умная проверка `--force-if-includes`. Она не отменяет, а дополняет проверку `--force-with-lease`, анализируя локальный reflog (журнал ссылок), чтобы выяснить: содержала ли  локальная ветка когда-либо тот коммит, который сейчас находится на сервере.
 
 ![Push --force-with-lease успех](screenshots/star-2-force-with-lease.png)
 
