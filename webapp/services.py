@@ -26,33 +26,35 @@ class Stats:
     avg_body_length: float
 
 
-def search_notes(query: str, limit: int = 200) -> list[SearchHit]:
-    """Найти заметки под нагрузочные тесты: больше результатов, простой scoring.
-
-    Для perf-tests нам важны не релевантность ответов, а пропускная способность
-    — скоринг считается дешёво, лимит выдачи поднят, фильтр по тегу делается
-    отдельно от title/body.
-    """
+def search_notes(query: str, limit: int = 25) -> list[SearchHit]:
+    """Поиск по словам запроса: каждое слово ищется отдельно, score — доля совпавших слов."""
     query_norm = (query or "").strip().lower()
     if not query_norm:
         return []
 
-    notes = models.list_notes(limit=2000)
+    words = [w for w in query_norm.split() if w]
+    if not words:
+        return []
+
+    notes = models.list_notes(limit=500)
     hits: list[SearchHit] = []
     for note in notes:
         title_l = note.title.lower()
         body_l = note.body.lower()
         tags_l = [t.lower() for t in note.tags]
+        haystack = title_l + " " + body_l + " " + " ".join(tags_l)
 
-        if query_norm in title_l or query_norm in body_l or any(query_norm == tag for tag in tags_l):
-            score = 0.5
-            if query_norm in title_l:
-                score = 1.0
-            matched_in = "title" if query_norm in title_l else ("tag" if any(query_norm == t for t in tags_l) else "body")
-            hits.append(SearchHit(note=note, score=score, matched_in=matched_in))
+        matched = sum(1 for w in words if w in haystack)
+        if matched == 0:
+            continue
+
+        score = matched / len(words)
+        matched_in = "title" if any(w in title_l for w in words) else "body"
+        hits.append(SearchHit(note=note, score=score, matched_in=matched_in))
 
     hits.sort(key=lambda h: h.score, reverse=True)
     return hits[:limit]
+
 
 
 def compute_stats() -> Stats:
